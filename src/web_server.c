@@ -123,6 +123,32 @@ static void http_listen(void *arg)
     LOG_INFO("Closed connection to: %d", client_socket);
 }
 
+static void free_web_server(struct web_server_t *server)
+{
+    free_routes(server->routes);
+    free(server->routes);
+    free_threadpool(server->threadpool);
+    free(server->threadpool);
+    free(server->connections);
+}
+
+static void close_connections(struct connections_t *connections)
+{
+    LOG_INFO("Closing connections");
+    for (int i = 0; i < connections->cap; i++) {
+        if (send(connections->connections[i], "Server shutting down", 20, MSG_NOSIGNAL) > 0) {
+            shutdown(connections->connections[i], SHUT_RDWR);
+            close(connections->connections[i]);
+        }
+    }
+}
+
+static void insert_connection(struct connections_t *connections, int connection)
+{
+    connections->index = ++connections->index % connections->cap;
+    connections->connections[connections->index] = connection;
+}
+
 int init_web_server(struct web_server_t *server, int port, int connections, int threads, int q_size, int num_routes, ...)
 {
     server->port = port;
@@ -178,32 +204,6 @@ int init_web_server(struct web_server_t *server, int port, int connections, int 
     va_end(args);
 
     return 0;
-}
-
-void free_web_server(struct web_server_t *server)
-{
-    free_routes(server->routes);
-    free(server->routes);
-    free_threadpool(server->threadpool);
-    free(server->threadpool);
-    free(server->connections);
-}
-
-static void close_connections(struct connections_t *connections)
-{
-    LOG_INFO("Closing connections");
-    for (int i = 0; i < connections->cap; i++) {
-        if (send(connections->connections[i], "Server shutting down", 20, MSG_NOSIGNAL) > 0) {
-            shutdown(connections->connections[i], SHUT_RDWR);
-            close(connections->connections[i]);
-        }
-    }
-}
-
-static void insert_connection(struct connections_t *connections, int connection)
-{
-    connections->index = ++connections->index % connections->cap;
-    connections->connections[connections->index] = connection;
 }
 
 int run_web_server(struct web_server_t *server)
