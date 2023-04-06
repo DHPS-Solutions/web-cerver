@@ -24,4 +24,10 @@ struct file_data_t {
  */
 struct file_data_t *read_file(FILE *input);
 
+/**
+ * Function used to free file data.
+ * @param file_data The file data to free.
+ */
+void free_file_data(struct file_data_t *file_data);
+
 #endif

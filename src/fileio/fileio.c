@@ -24,3 +24,12 @@ struct file_data_t *read_file(FILE *input)
 
     return res;
 }
+
+void free_file_data(struct file_data_t *file_data)
+{
+    if (file_data == NULL)
+        return;
+    
+    free(file_data->data);
+    free(file_data);
+}

@@ -66,5 +66,4 @@ void free_route(void *route)
 void free_routes(struct routes_t *routes)
 {
     free_tree(routes->base);
-    free(routes);
 }

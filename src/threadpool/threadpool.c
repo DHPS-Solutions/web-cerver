@@ -43,7 +43,6 @@ void free_threadpool(struct threadpool_t *workers)
     pthread_cond_destroy(&workers->cond_var->cond_variable);
     
     free(workers->cond_var);
-    free(workers);
 }
 
 static void *start_worker_thread(void *arg)
