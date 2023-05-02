@@ -23,14 +23,6 @@ enum ERequestType {
 };
 
 /**
- * Struct for request type
- */
-struct request_type_t {
-    char *key;
-    enum ERequestType type;
-};
-
-/**
  * Function for getting request type
  * @param request - request string
  * @return request type
