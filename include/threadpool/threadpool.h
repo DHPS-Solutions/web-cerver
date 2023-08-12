@@ -18,33 +18,33 @@
 #ifndef THREADPOOL_H
 #define THREADPOOL_H
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <pthread.h>
-#include <unistd.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <threadpool/queue.h>
 
 typedef void worker_thread_func(void *arg);
 
 struct task_t {
-    worker_thread_func *func;
-    void *arg;
-    int sleep_time;
+	worker_thread_func *func;
+	void *arg;
+	int sleep_time;
 };
 
 struct condition_t {
-    bool cond_predicate;
-    pthread_mutex_t cond_lock;
-    pthread_cond_t cond_variable;
+	bool cond_predicate;
+	pthread_mutex_t cond_lock;
+	pthread_cond_t cond_variable;
 };
 
 struct threadpool_t {
-    int max_threads;
-    struct queue_t *task_queue;
-    struct condition_t *cond_var;
-    pthread_t *threads;
+	int max_threads;
+	struct queue_t *task_queue;
+	struct condition_t *cond_var;
+	pthread_t *threads;
 };
 
 void threadpool_init(struct threadpool_t *threadpool, int max_threads, int queue_size);
@@ -55,7 +55,8 @@ void threadpool_start(struct threadpool_t *threadpool);
 
 bool submit_worker_task(struct threadpool_t *threadpool, worker_thread_func func, void *arg);
 
-bool submit_worker_task_timeout(struct threadpool_t *threadpool, worker_thread_func func, void *arg, int timeout);
+bool submit_worker_task_timeout(struct threadpool_t *threadpool, worker_thread_func func, void *arg,
+								int timeout);
 
 void threadpool_stop(struct threadpool_t *threadpool);
 

@@ -17,12 +17,12 @@
 
 #ifndef FILEIO_H
 #define FILEIO_H
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 struct file_data_t {
-    char *data;
-    size_t data_len;
+	char *data;
+	size_t data_len;
 };
 
 struct file_data_t *read_file(FILE *input);

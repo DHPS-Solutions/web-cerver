@@ -15,27 +15,23 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <logger.h>
 #include <fileio/fileio.h>
-#include <web_server.h>
+#include <logger.h>
 #include <routing/route.h>
 #include <threadpool/threadpool.h>
+#include <web_server.h>
 
 int main()
 {
-    struct web_server_t server;
-    if (web_server_init(&server, 80, 10, 10, 20, 5,
-                    "/", "./static/index.html",
-                    "/home", "./static/index.html",
-                    "/about", "./static/about.html",
-                    "/contact", "./static/contact.html",
-                    "/styles.css", "./static/styles.css"
-                    ) != 0) {
-        LOG_ERR("Failed to initialize web server\n");
-        exit(1);
-    }
-    
-    web_server_run(&server);
+	struct web_server_t server;
+	if (web_server_init(&server, 80, 10, 10, 20, 5, "/", "./static/index.html", "/home",
+						"./static/index.html", "/about", "./static/about.html", "/contact",
+						"./static/contact.html", "/styles.css", "./static/styles.css") != 0) {
+		LOG_ERR("Failed to initialize web server\n");
+		exit(1);
+	}
 
-    return 0;
+	web_server_run(&server);
+
+	return 0;
 }

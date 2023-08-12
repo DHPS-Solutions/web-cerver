@@ -4,12 +4,12 @@
 #include "binarytree.h"
 
 struct routes_t {
-    struct tree_t *base;
+	struct tree_t *base;
 };
 
 struct route_t {
-    char *key;
-    char *value;
+	char *key;
+	char *value;
 };
 
 void routes_init(struct routes_t *routes);

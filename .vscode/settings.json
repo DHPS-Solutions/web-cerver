@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "string.h": "c",
-        "route.h": "c",
-        "fileio.h": "c",
-        "in.h": "c"
-    }
-}

@@ -99,7 +99,7 @@ bool tree_node_insert(struct tree_t *tree, struct tree_node_t *node)
 		node->parent = parent;
 	}
 
-    return true;
+	return true;
 }
 
 struct tree_node_t *tree_search(struct tree_t *tree, const void *data)
