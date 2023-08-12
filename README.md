@@ -28,4 +28,4 @@ int main()
 }
 ```
 
-To run the server after you have configured it, simply write `make` or `make server` followed by `./server`.
+To run the server after you have configured it, simply write `make` followed by `./server`.
