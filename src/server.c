@@ -21,11 +21,10 @@
 #include <routing/route.h>
 #include <threadpool/threadpool.h>
 
-
 int main()
 {
     struct web_server_t server;
-    if (web_server_init(&server, 8081, 10, 10, 20, 5,
+    if (web_server_init(&server, 80, 10, 10, 20, 5,
                     "/", "./static/index.html",
                     "/home", "./static/index.html",
                     "/about", "./static/about.html",
