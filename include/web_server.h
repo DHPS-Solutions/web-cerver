@@ -15,28 +15,50 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef WEB_SERVER_H
+#define WEB_SERVER_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <pthread.h>
+
+#include <web_server.h>
 #include <logger.h>
 #include <fileio/fileio.h>
-#include <web_server.h>
 #include <routing/route.h>
 #include <threadpool/threadpool.h>
 
+struct web_server_t {
+    int port;
+    int socket;
+    bool running;
+    struct threadpool_t *threadpool;
+    struct routes_t *routes;
+    struct connections_t *connections;
+};
 
-int main()
-{
-    struct web_server_t server;
-    if (web_server_init(&server, 8081, 10, 10, 20, 5,
-                    "/", "./static/index.html",
-                    "/home", "./static/index.html",
-                    "/about", "./static/about.html",
-                    "/contact", "./static/contact.html",
-                    "/styles.css", "./static/styles.css"
-                    ) != 0) {
-        LOG_ERR("Failed to initialize web server\n");
-        exit(1);
-    }
-    
-    web_server_run(&server);
+struct connections_t {
+    int *connections;
+    int index;
+    int cap;
+};
 
-    return 0;
-}
+struct thread_data_t {
+    int connection;
+    struct routes_t *routes;
+    bool *running;
+};
+
+
+int web_server_init(struct web_server_t *server, int port, int connections, int threads, int q_size, int num_routes, ...);
+
+int web_server_run(struct web_server_t *server);
+
+#endif

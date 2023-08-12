@@ -9,11 +9,11 @@
 #include <netinet/in.h>
 #include <pthread.h>
 
-#include "web_server.h"
-#include "logger.h"
-#include "fileio/fileio.h"
-#include "routing/route.h"
-#include "threadpool/threadpool.h"
+#include <web_server.h>
+#include <logger.h>
+#include <fileio/fileio.h>
+#include <routing/route.h>
+#include <threadpool/threadpool.h>
 
 static void check_quit(void *arg)
 {
@@ -66,7 +66,7 @@ static int serve_file(struct routes_t *routes, int socket, char *buffer)
     if (strcmp(route, "/favicon.ico") == 0)
         return -1;
 
-    struct route_t * destination = find_route(routes, route);
+    struct route_t * destination = route_find(routes, route);
     
     if (destination == NULL)
         strcat(template, "./static/404.html");
@@ -89,7 +89,7 @@ static int serve_file(struct routes_t *routes, int socket, char *buffer)
     strcat(http_header, "\r\n\r\n");
     send(socket, http_header, sizeof(http_header), MSG_DONTWAIT);
 
-    free_file_data(fd);
+    file_data_free(fd);
 
     LOG_INFO("SERVED: %s", template);
 
@@ -123,17 +123,23 @@ static void http_listen(void *arg)
     LOG_INFO("Closed connection to: %d", client_socket);
 }
 
-int init_web_server(struct web_server_t *server, int port, int connections, int threads, int q_size, int num_routes, ...)
+int web_server_init(struct web_server_t *server, int port, int connections, int threads, int q_size, int num_routes, ...)
 {
     server->port = port;
     server->socket = socket(PF_INET, SOCK_STREAM, 0);
     if (server->socket < 0) {
-        perror("socket");
+        LOG_ERR("socket");
         return -1;
     }
 
-    if (setsockopt(server->socket, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), &(int){1}, sizeof(int)) < 0) {
-        perror("setsockopt");
+    #ifdef __APPLE__
+        int optname = SO_REUSEADDR;
+    #else
+        int optname = SO_REUSEADDR | 15;
+    #endif
+
+    if (setsockopt(server->socket, SOL_SOCKET, optname, &(int){1}, sizeof(int)) < 0) {
+        LOG_ERR("setsockopt");
         return -1;
     }
     
@@ -143,12 +149,12 @@ int init_web_server(struct web_server_t *server, int port, int connections, int 
     address.sin_port = htons(port);
     
     if (bind(server->socket, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("bind");
+        LOG_ERR("bind");
         return -1;
     }
 
     if (listen(server->socket, 5) != 0) {
-        perror("listen");
+        LOG_ERR("listen");
         return -1;
     }
 
@@ -157,10 +163,10 @@ int init_web_server(struct web_server_t *server, int port, int connections, int 
     server->connections->cap = connections;
 
     server->threadpool = malloc(sizeof(struct threadpool_t));
-    init_threadpool(server->threadpool, threads, q_size);
+    threadpool_init(server->threadpool, threads, q_size);
 
     server->routes = malloc(sizeof(struct routes_t));
-    init_routes(server->routes);
+    routes_init(server->routes);
 
     va_list args;
     va_start(args, num_routes);
@@ -172,7 +178,7 @@ int init_web_server(struct web_server_t *server, int port, int connections, int 
         if (route == NULL || value == NULL)
             return -1;
 
-        insert_route(server->routes, create_route(route, value));
+        route_insert(server->routes, route_create(route, value));
     }
 
     va_end(args);
@@ -182,9 +188,9 @@ int init_web_server(struct web_server_t *server, int port, int connections, int 
 
 void free_web_server(struct web_server_t *server)
 {
-    free_routes(server->routes);
+    routes_free(server->routes);
     free(server->routes);
-    free_threadpool(server->threadpool);
+    threadpool_free(server->threadpool);
     free(server->threadpool);
     free(server->connections);
 }
@@ -202,15 +208,16 @@ static void close_connections(struct connections_t *connections)
 
 static void insert_connection(struct connections_t *connections, int connection)
 {
-    connections->index = ++connections->index % connections->cap;
+    connections->index++;
+    connections->index = connections->index % connections->cap;
     connections->connections[connections->index] = connection;
 }
 
-int run_web_server(struct web_server_t *server)
+int web_server_run(struct web_server_t *server)
 {
     int client_socket = -1;
 
-    start_threadpool(server->threadpool);
+    threadpool_start(server->threadpool);
 
     server->running = true;
 

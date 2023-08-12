@@ -15,38 +15,18 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef FILEIO_H
+#define FILEIO_H
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <fileio/fileio.h>
+struct file_data_t {
+    char *data;
+    size_t data_len;
+};
 
-struct file_data_t *read_file(FILE *input)
-{
-    if (input == NULL)
-        return NULL;
-    
-    struct file_data_t *res = (struct file_data_t *)
-                                (malloc(sizeof(struct file_data_t)));
+struct file_data_t *read_file(FILE *input);
 
-    fseek(input, 0, SEEK_END);
+void file_data_free(struct file_data_t *file_data);
 
-    res->data_len = ftell(input);
-
-    rewind(input);
-
-    res->data = (char *)(malloc(res->data_len * sizeof(char)));
-
-    if (fread(res->data, sizeof(char), res->data_len, input) != res->data_len)
-        return NULL;
-
-    return res;
-}
-
-void file_data_free(struct file_data_t *file_data)
-{
-    if (file_data == NULL)
-        return;
-    
-    free(file_data->data);
-    free(file_data);
-}
+#endif

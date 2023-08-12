@@ -1,16 +1,33 @@
+/*
+ *  Copyright (C) 2022-2023 Callum Gran
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include <stdlib.h>
-#include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <sys/time.h>
 
-#include "queue.h"
-#include "threadpool.h"
+#include <threadpool/queue.h>
+#include <threadpool/threadpool.h>
 
-void init_threadpool(struct threadpool_t *threadpool, int max_threads, int queue_size)
+void threadpool_init(struct threadpool_t *threadpool, int max_threads, int queue_size)
 {
     struct queue_t *queue = (struct queue_t *)(malloc(sizeof(struct queue_t)));
-    init_queue(queue, queue_size);
+    queue_init(queue, queue_size);
     threadpool->task_queue = queue;
 
     threadpool->max_threads = max_threads;
@@ -32,9 +49,9 @@ void threadpool_stop(struct threadpool_t *workers)
         pthread_join(*(workers->threads + i), NULL);
 }
 
-void free_threadpool(struct threadpool_t *workers)
+void threadpool_free(struct threadpool_t *workers)
 {
-    free_queue(workers->task_queue);
+    queue_free(workers->task_queue);
     free(workers->task_queue);
 
     free(workers->threads);
@@ -58,7 +75,10 @@ static void *start_worker_thread(void *arg)
         pthread_mutex_unlock(&data->cond_var->cond_lock);
         
         if (item != NULL && data->cond_var->cond_predicate) {
-            usleep(item->sleep_time);
+            struct timeval tv;
+            tv.tv_sec = 0;
+            tv.tv_usec = item->sleep_time * 1000;
+            select(1, NULL, NULL, NULL, &tv);
             item->func(item->arg);
             free(item);
         } else {
@@ -67,7 +87,7 @@ static void *start_worker_thread(void *arg)
     }
 }
 
-void start_threadpool(struct threadpool_t *workers)
+void threadpool_start(struct threadpool_t *workers)
 {
     for (int i = 0; i < workers->max_threads; i++)
         pthread_create(workers->threads + i, NULL, start_worker_thread, workers);
